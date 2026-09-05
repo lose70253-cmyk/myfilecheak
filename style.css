@@ -474,3 +474,19 @@ c
 .bn-number.custom-font {
   font-family: 'Custom Bangla Font', serif;
 }
+/* রিপোর্ট কার্ডের পেছনে হালকা লোগো জলছাপ */
+.report-inner{ z-index:0; }
+.report-inner::before{
+  content:"";
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:120mm; height:120mm;
+  background-image:url("logo.png");
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+  opacity:0.07;
+  pointer-events:none;
+  z-index:-1;
+}
