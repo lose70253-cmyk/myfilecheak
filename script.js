@@ -611,6 +611,11 @@ function adminPrintAll(){
   adminStatusMsg.textContent = `${toBnDigits(rows.length)} টি রেজাল্ট কার্ড তৈরি হয়েছে — প্রিন্ট ডায়ালগ খুলছে...`;
   adminPrintArea.innerHTML = rows.map(row => `<div class="print-page">${buildReportCardHTML(row)}</div>`).join("");
 
+  // রঙিন/সাদা-কালো — কোনটা বাছাই করা হয়েছে সেই অনুযায়ী ক্লাস বসানো হচ্ছে
+  const printModeInput = document.querySelector('input[name="adminPrintMode"]:checked');
+  const isBW = printModeInput && printModeInput.value === "bw";
+  adminPrintArea.classList.toggle("grayscale-print", isBW);
+
   setTimeout(() => window.print(), 300);
 }
 
