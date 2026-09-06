@@ -4,11 +4,13 @@
 // একটা শীট হলেও এভাবেই বসাবেন — শুধু একটা লিংক থাকবে লিস্টে
 // কীভাবে CSV লিংক বের করবেন তার নিয়ম README.md ফাইলে দেওয়া আছে
 // ================================
-const SHEET_CSV_URLS = ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTm2uenDiLu93wXEBWrAB1stf1ltmKcLQWpGMRfs1uNCgeUWeYLLmAfi0p2I1D6Lxmp8Xw-sR8bxVCn/pub?gid=30031640&single=true&output=csv",
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRmA_P_ghMLKrBr48GYtRJWAx4iLu83Af9CHmGeKDpr6ZmdpRWF78QNUoSMIFeayRCk8m7AK8A5YpbE/pub?gid=838426032&single=true&output=csv",
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQe3YYwCOzhgitW2vpZMz5ulFcUWz3N6g_Y_8ee8ep8DfvXlc7fN1wXyTTPFzSh920eohFkQ8-t90Zf/pub?gid=2146845667&single=true&output=csv",
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTVbetqgMXwBNcAwT8x6ZVEygiBlYADg5r5JoYkxU5dnQfjNSsIYEaC9ZkdGOPJ5BKoaylWBCaYBakq/pub?gid=2141326006&single=true&output=csv",
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRhk2UStC5wjuA7IoUVwQnQwhvxKShBl3iZjPmldbxp5QCyLTl2TMuzyFNqk3xpNQyC0kli-wvZtqyI/pub?gid=1219274164&single=true&output=csv"
+const SHEET_CSV_URLS = ["https://docs.google.com/spreadsheets/d/e/2PACX-1vRWC0b7Oao1XFk4Jqv0L_hncYe55e1wA8K3BjzwFiukhnhjfXb-OOdJvc0poWDnotJbCYNUsdrE0rEb/pub?gid=62519941&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vQe3YYwCOzhgitW2vpZMz5ulFcUWz3N6g_Y_8ee8ep8DfvXlc7fN1wXyTTPFzSh920eohFkQ8-t90Zf/pub?gid=2146845667&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTm2uenDiLu93wXEBWrAB1stf1ltmKcLQWpGMRfs1uNCgeUWeYLLmAfi0p2I1D6Lxmp8Xw-sR8bxVCn/pub?gid=30031640&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTY7fQGK05-eoxAzHkqgssoV-pWYIiSvHz9ygs-E9sPs5P4Klnh-YsCSXPhrb_7pJPFGUs2Mtf3ZLxk/pub?gid=650113640&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vRhk2UStC5wjuA7IoUVwQnQwhvxKShBl3iZjPmldbxp5QCyLTl2TMuzyFNqk3xpNQyC0kli-wvZtqyI/pub?gid=1219274164&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vRmA_P_ghMLKrBr48GYtRJWAx4iLu83Af9CHmGeKDpr6ZmdpRWF78QNUoSMIFeayRCk8m7AK8A5YpbE/pub?gid=838426032&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTVbetqgMXwBNcAwT8x6ZVEygiBlYADg5r5JoYkxU5dnQfjNSsIYEaC9ZkdGOPJ5BKoaylWBCaYBakq/pub?gid=2141326006&single=true&output=csv",
 ];
 
 // ================================
@@ -23,7 +25,7 @@ const ADMIN_PASSWORD = "sotota2027";
 const SCHOOL_INFO = {
   name: "সততা প্রি-ক্যাডেট স্কুল",
   address: "নলিন বাজার, গোপালপুর, টাঙ্গাইল",
-  email: "যোগাযোগ:01718-813251",
+  email: " যোগাযোগঃ 01718-813251",
   established: 2020,
   // রিপোর্ট কার্ডের হেডারে "স্থাপিতঃ২০২০ইং | ..." এর পরে যা দেখাবে
   examLabel: "২য় সেমিস্টার পরীক্ষার ফলাফল-২০২৬"
@@ -76,7 +78,7 @@ const ATTENDANCE_MAX_MARKS = 100;
 // (MT2 কলামের জন্য আলাদা লেবেল লিখতে হবে না, এটা স্বয়ংক্রিয়ভাবে হ্যান্ডেল হবে)
 // ================================
 const SUBJECT_LABELS = {
-  "bangla": "বাংলা (Bangla)",
+    "bangla": "বাংলা (Bangla)",
   "bangla 1st": "বাংলা ১ম পত্র",
   "bangla 2nd": "বাংলা ২য় পত্র",
   "english": "ইংরেজি (English)",
@@ -130,6 +132,23 @@ const REMARKS_BY_RANK = {
 
   // ফেইল করেছে
   "fail": "আরও পরিশ্রম করে পরবর্তী পরীক্ষায় ভালো ফলাফল করতে হবে।"
+};
+
+// ================================
+// আগের পরীক্ষার তুলনায় মেরিট পজিশন বাড়লো/কমলো সেই অনুযায়ী মন্তব্য
+// এটা কাজ করার জন্য Google Sheet-এ "previous rank" নামে একটা নতুন কলাম
+// যোগ করে সেখানে প্রতিটা ছাত্রের আগের পরীক্ষার মেরিট পজিশন (যেমন 1, 2, 3...)
+// বসিয়ে দিতে হবে। এই কলাম খালি থাকলে (বা "previous rank" কলামই না থাকলে)
+// নিচের REMARKS_BY_RANK থেকে আগের মতোই মন্তব্য আসবে — কিছু ভাঙবে না।
+// অগ্রাধিকার (priority): ফেল > র‍্যাঙ্ক পরিবর্তন (উন্নতি/অবনতি) > সাধারণ REMARKS_BY_RANK
+// ================================
+const REMARKS_BY_CHANGE = {
+  // আগের চেয়ে ভালো অবস্থানে এসেছে (যেমন ৪র্থ থেকে ১ম)
+  improved: "অভিনন্দন! আপনার ফলাফলে উন্নতি হয়েছে। এই ধারা অব্যাহত রাখুন।",
+  
+  dropped: "ফলাফলে কিছুটা অবনতি হয়েছে। আরও মনোযোগ দিয়ে চেষ্টা করুন।",
+  
+  same: "আপনি আগের অবস্থান ধরে রেখেছেন। আরও ভালো করার চেষ্টা করুন।"
 };
 
 // সব শিক্ষার্থীকে র‍্যাঙ্ক অনুযায়ী মেরিট দেওয়া হবে
