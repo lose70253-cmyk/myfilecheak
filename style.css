@@ -396,7 +396,25 @@ select.input{
 }
 
 .hidden{display:none !important;}
+/* এডমিন প্যানেলে রঙিন/সাদা-কালো প্রিন্ট বাছাই করার অপশন */
+.print-mode-choice{
+  display:flex;gap:20px;margin:16px 0 6px;
+}
+.print-mode-choice label{
+  display:flex;align-items:center;gap:6px;
+  font-size:.92rem;font-weight:600;color:var(--ink);
+  cursor:pointer;
+}
+.print-mode-choice input[type="radio"]{
+  width:16px;height:16px;accent-color:#0f8a52;cursor:pointer;
+}
 
+/* "সাদা-কালো" বাছাই করলে প্রিন্ট এরিয়াতে এই ক্লাসটা যোগ হয়ে
+   পুরো কার্ডকে গ্রেস্কেলে (কালার ছাড়া) দেখায়/প্রিন্ট করে */
+.grayscale-print{
+  filter:grayscale(100%);
+  -webkit-filter:grayscale(100%);
+}
 /* পরীক্ষার রুটিন পেইজ */
 .routine-header{text-align:center;margin-bottom:14px;}
 .routine-header h2{
