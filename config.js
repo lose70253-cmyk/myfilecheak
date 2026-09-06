@@ -51,7 +51,7 @@ const SCHOOL_INFO = {
 // শুধু PASS/FAIL দেখাবে (প্রতিটা বিষয়ের ঘরে এবং Grand Total ঘরে)
 // নিচে ঠিক সেই বানানেই লিখুন যেভাবে আপনার Google Sheet এর "class" কলামে লেখা আছে
 // ================================
-const NO_GRADE_CLASSES = ["প্লে", "নার্সারী", "ওয়ান"];
+const NO_GRADE_CLASSES = [];
 
 const MT2_COLUMN_SUFFIX = " mt2";
 const MAX_COLUMN_SUFFIX = " max";
