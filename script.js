@@ -7,7 +7,7 @@ const META_COLUMNS = [
   "attendance",
   "mt2",
   "remarks", "gpa", "result",
-  "percentage", "total", "grand total", "average", "merit", "rank"
+  "percentage", "total", "grand total", "average", "merit", "rank", "previous rank"
 ];
 
 let allRows = [];
@@ -144,9 +144,10 @@ function getSubjectMarks(row, subjectKey){
   const cleanObtained = isNaN(obtained) ? 0 : obtained;
   const cleanMt2 = isNaN(mt2) ? 0 : mt2;
 
-// TOTAL: Sheet-এ দেওয়া থাকলে সেটাই, নাহলে শুধু OBTAINED (MT2 আর যোগ হবে না)
-const totalFromSheet = parseFloat(row[subjectKey + totalSuffix]);
-const total = isNaN(totalFromSheet) ? cleanObtained : totalFromSheet;
+  // TOTAL: Sheet-এ দেওয়া থাকলে সেটাই, নাহলে শুধু OBTAINED
+  // (MT2 নম্বর এখন আর টোটালের সাথে যোগ হয় না)
+  const totalFromSheet = parseFloat(row[subjectKey + totalSuffix]);
+  const total = isNaN(totalFromSheet) ? cleanObtained : totalFromSheet;
 
   // %: Sheet-এ দেওয়া থাকলে সেটাই, নাহলে TOTAL/MAX*100
   const pctFromSheet = parseFloat(row[subjectKey + percentSuffix]);
@@ -199,27 +200,30 @@ function calculateMeritForAllClasses(){
   classesList.forEach(cls => {
     const classStudents = allRows.filter(r => norm(r["class"]) === norm(cls));
 
-    const studentsWithTotal = classStudents.map(row => {
-      let totalObtained = 0;
+    // মেরিট এখন থেকে GPA/পয়েন্ট অনুযায়ী হবে (মোট নম্বর অনুযায়ী না) —
+    // attendance-এর পয়েন্ট এই গড়ে যোগ হবে না (শুধু বাকি সাবজেক্টগুলোর পয়েন্ট দিয়ে গড় করা হয়)
+    const studentsWithPoints = classStudents.map(row => {
+      let totalPoints = 0, pointSubjectCount = 0;
       subjectKeys.forEach(key => {
         const marks = getSubjectMarks(row, key);
-        if(marks.hasAny) totalObtained += marks.total;
+        if(!marks.hasAny) return;
+        totalPoints += gradeFromPercent(marks.pct).point;
+        pointSubjectCount++;
       });
-      const attendance = getCombinedAttendance(row);
-      if(attendance) totalObtained += attendance.obtained;
-      return { row, totalObtained };
+      const avgGPA = pointSubjectCount ? totalPoints / pointSubjectCount : 0;
+      return { row, avgGPA };
     });
 
-    studentsWithTotal.sort((a, b) => b.totalObtained - a.totalObtained);
+    studentsWithPoints.sort((a, b) => b.avgGPA - a.avgGPA);
 
     studentMeritData[norm(cls)] = {};
-    studentsWithTotal.forEach((item, index) => {
+    studentsWithPoints.forEach((item, index) => {
       const roll = item.row["roll"];
       const rank = index + 1;
       const meritLabel = generateMeritLabel(rank);
       studentMeritData[norm(cls)][roll] = {
         rank: rank,
-        totalObtained: item.totalObtained,
+        avgGPA: item.avgGPA,
         merit: rank <= MERIT_POSITION_LIMIT ? meritLabel : null
       };
     });
@@ -227,10 +231,22 @@ function calculateMeritForAllClasses(){
 }
 
 // র‍্যাঙ্ক অনুযায়ী রিমার্কস বের করা
-function getRemarksForStudent(rank, anyFail){
+// অগ্রাধিকার: ফেল > আগের পরীক্ষার তুলনায় র‍্যাঙ্ক পরিবর্তন (যদি "previous rank" দেওয়া থাকে) > সাধারণ REMARKS_BY_RANK
+function getRemarksForStudent(rank, anyFail, prevRank){
   if(anyFail){
     return REMARKS_BY_RANK["fail"] || "আরও পরিশ্রম করে পরবর্তী পরীক্ষায় ভালো ফলাফল করতে হবে।";
   }
+
+  if(rank && prevRank && typeof REMARKS_BY_CHANGE !== "undefined"){
+    if(rank < prevRank){
+      return REMARKS_BY_CHANGE.improved; // আগের চেয়ে এগিয়েছে (র‍্যাঙ্ক সংখ্যায় ছোট হয়েছে)
+    }
+    if(rank > prevRank){
+      return REMARKS_BY_CHANGE.dropped; // আগের চেয়ে পিছিয়েছে (র‍্যাঙ্ক সংখ্যায় বড় হয়েছে)
+    }
+    return REMARKS_BY_CHANGE.same; // অবস্থান অপরিবর্তিত
+  }
+
   if(rank && REMARKS_BY_RANK[String(rank)]){
     return REMARKS_BY_RANK[String(rank)];
   }
@@ -241,7 +257,7 @@ function getRemarksForStudent(rank, anyFail){
 function buildReportCardHTML(row){
   const subjectKeys = getSubjectKeys();
   const noGrade = isNoGradeClass(row["class"]);
-  let totalObtained = 0, totalMax = 0, subjectCount = 0, anyFail = false, totalPoints = 0;
+  let totalObtained = 0, totalMax = 0, subjectCount = 0, anyFail = false, totalPoints = 0, pointSubjectCount = 0;
   let subjectRowsHTML = "";
 
   subjectKeys.forEach(key => {
@@ -256,6 +272,7 @@ function buildReportCardHTML(row){
 
     const subjPoint = gradeFromPercent(marks.pct).point;
     totalPoints += subjPoint;
+    pointSubjectCount++;
 
     subjectRowsHTML += `
       <tr>
@@ -284,7 +301,8 @@ function buildReportCardHTML(row){
     totalObtained += attendanceMarks.obtained;
     totalMax += attendanceMarks.max;
     subjectCount++;
-    totalPoints += attPoint;
+    // নোট: attendance-এর পয়েন্ট (attPoint) ইচ্ছাকৃতভাবে GPA-এর গড়ে যোগ
+    // করা হচ্ছে না — শুধু এর নম্বর (obtained) গ্র্যান্ড টোটালে যোগ হচ্ছে
 
     subjectRowsHTML += `
       <tr>
@@ -304,8 +322,9 @@ function buildReportCardHTML(row){
   // Grand Total ঘরে আর গড় করে (average percentage থেকে) কোনো GRADE দেখানো হবে না —
   // শুধু PASS/FAILED রেজাল্ট দেখাবে। প্রতিটা বিষয়ের নিজস্ব গ্রেড আলাদাভাবে ওপরের সারিতেই থাকবে।
   const overallResult = anyFail ? "FAILED" : "PASSED";
-  // সামগ্রিক GPA = সব বিষয়ের গ্রেড পয়েন্টের গড়; কোনো বিষয়ে ফেল করলে প্রচলিত নিয়ম অনুযায়ী GPA ০.০০
-  const overallGPA = anyFail ? 0 : (subjectCount ? totalPoints / subjectCount : 0);
+  // সামগ্রিক GPA = সব বিষয়ের (attendance বাদে) গ্রেড পয়েন্টের গড়।
+  // কোনো বিষয়ে ফেল করলেও এখন আর GPA ০.০০ দেখাবে না — আসল গড় পয়েন্টই দেখাবে
+  const overallGPA = pointSubjectCount ? totalPoints / pointSubjectCount : 0;
 
   // মেরিট ইনফরমেশন বের করা
   const classNorm = norm(row["class"]);
@@ -320,7 +339,9 @@ function buildReportCardHTML(row){
 
   let remarks = row["remarks"];
   if(!remarks){
-    remarks = getRemarksForStudent(rank, anyFail);
+    const prevRankVal = parseInt(row["previous rank"], 10);
+    const prevRank = isNaN(prevRankVal) ? null : prevRankVal;
+    remarks = getRemarksForStudent(rank, anyFail, prevRank);
   }
 
   const studentName = row["name"] || "-";
@@ -360,8 +381,8 @@ function buildReportCardHTML(row){
             <td><span class="info-label">Attendance:</span> <span class="info-value">${attendance}</span></td>
           </tr>
           <tr>
-            <td><span class="info-label">Class Roll:</span> <span class="info-value">${toBnDigits(row["roll"] || "-")}</span></td>
-            <td><span class="info-label">Merit Position:</span> <span class="info-value">${meritInfo && meritInfo.merit ? meritInfo.merit : '-'}</span></td>
+            <td><span class="info-label">Class Roll:</span> <span class="info-value">${row["roll"] || "-"}</span></td>
+            <td><span class="info-label">Merit Position:</span> <span class="info-value">${meritInfo && meritInfo.merit ? meritInfo.merit.replace(/\s*Merit$/i, '') : '-'}</span></td>
           </tr>
         </table>
 
