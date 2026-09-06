@@ -120,13 +120,23 @@
         <div class="card-title">🖨️ সব রেজাল্ট কার্ড প্রিন্ট করুন</div>
 
         <label class="field-label" for="adminClassSelect">শ্রেণী নির্বাচন করুন</label>
-        <select id="adminClassSelect" class="input">
-          <option value="">লোড হচ্ছে...</option>
-        </select>
+<select id="adminClassSelect" class="input">
+  <option value="">লোড হচ্ছে...</option>
+</select>
 
-        <button id="adminPrintBtn" class="btn-primary">
-          <span class="icon">🖨️</span> রেজাল্ট কার্ড তৈরি করুন
-        </button>
+<label class="field-label">প্রিন্ট মোড</label>
+<div class="print-mode-choice">
+  <label>
+    <input type="radio" name="adminPrintMode" value="color" checked> রঙিন
+  </label>
+  <label>
+    <input type="radio" name="adminPrintMode" value="bw"> সাদা-কালো
+  </label>
+</div>
+
+<button id="adminPrintBtn" class="btn-primary">
+  <span class="icon">🖨️</span> রেজাল্ট কার্ড তৈরি করুন
+</button>
 
         <p id="adminStatusMsg" class="status-msg"></p>
       </section>
