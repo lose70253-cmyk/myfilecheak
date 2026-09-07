@@ -87,14 +87,12 @@ function generateMeritLabel(rank) {
   }
 }
 
-// বাংলাদেশ গ্রেডিং সিস্টেম অনুযায়ী গ্রেড হিসাব
+// গ্রেডিং সিস্টেম অনুযায়ী গ্রেড হিসাব
 function gradeFromPercent(pct){
   if(pct >= 80) return {grade:"A+", point:5.00};
-  if(pct >= 70) return {grade:"A",  point:4.00};
-  if(pct >= 60) return {grade:"A-", point:3.50};
-  if(pct >= 50) return {grade:"B",  point:3.00};
-  if(pct >= 40) return {grade:"C",  point:2.00};
-  if(pct >= 33) return {grade:"D",  point:1.00};
+  if(pct >= 60) return {grade:"A",  point:4.00};
+  if(pct >= 40) return {grade:"B",  point:3.00};
+  if(pct >= 33) return {grade:"C",  point:2.00};
   return {grade:"F", point:0.00};
 }
 
@@ -102,10 +100,8 @@ function gradeFromPercent(pct){
 function gradeFromGPA(gpa){
   if(gpa >= 5.00) return "A+";
   if(gpa >= 4.00) return "A";
-  if(gpa >= 3.50) return "A-";
   if(gpa >= 3.00) return "B";
   if(gpa >= 2.00) return "C";
-  if(gpa >= 1.00) return "D";
   return "F";
 }
 
@@ -408,7 +404,7 @@ function buildReportCardHTML(row){
         </table>
         </div>
 
-        ${noGrade ? '' : '<p class="grade-scale">Grade Scale: A+ (৮০-১০০), A (৭০-৭৯), A- (৬০-৬৯), B (৫০-৫৯), C (৪০-৪৯), D (৩৩-৩৯), F (০-৩২)</p>'}
+        ${noGrade ? '' : '<p class="grade-scale">Grade Scale: A+ (৮০-১০০), A (৬০-৭৯), B (৪০-৫৯), C (৩৩-৩৯), F (০-৩২)</p>'}
 
         <div class="remarks-box">
           <span>মন্তব্য (Remarks):</span> <em>${remarks}</em>
