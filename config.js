@@ -4,13 +4,13 @@
 // একটা শীট হলেও এভাবেই বসাবেন — শুধু একটা লিংক থাকবে লিস্টে
 // কীভাবে CSV লিংক বের করবেন তার নিয়ম README.md ফাইলে দেওয়া আছে
 // ================================
-const SHEET_CSV_URLS = ["https://docs.google.com/spreadsheets/d/e/2PACX-1vRWC0b7Oao1XFk4Jqv0L_hncYe55e1wA8K3BjzwFiukhnhjfXb-OOdJvc0poWDnotJbCYNUsdrE0rEb/pub?gid=62519941&single=true&output=csv",
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vQe3YYwCOzhgitW2vpZMz5ulFcUWz3N6g_Y_8ee8ep8DfvXlc7fN1wXyTTPFzSh920eohFkQ8-t90Zf/pub?gid=2146845667&single=true&output=csv",
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vTm2uenDiLu93wXEBWrAB1stf1ltmKcLQWpGMRfs1uNCgeUWeYLLmAfi0p2I1D6Lxmp8Xw-sR8bxVCn/pub?gid=30031640&single=true&output=csv",
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vTY7fQGK05-eoxAzHkqgssoV-pWYIiSvHz9ygs-E9sPs5P4Klnh-YsCSXPhrb_7pJPFGUs2Mtf3ZLxk/pub?gid=650113640&single=true&output=csv",
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vRhk2UStC5wjuA7IoUVwQnQwhvxKShBl3iZjPmldbxp5QCyLTl2TMuzyFNqk3xpNQyC0kli-wvZtqyI/pub?gid=1219274164&single=true&output=csv",
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vRmA_P_ghMLKrBr48GYtRJWAx4iLu83Af9CHmGeKDpr6ZmdpRWF78QNUoSMIFeayRCk8m7AK8A5YpbE/pub?gid=838426032&single=true&output=csv",
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vTVbetqgMXwBNcAwT8x6ZVEygiBlYADg5r5JoYkxU5dnQfjNSsIYEaC9ZkdGOPJ5BKoaylWBCaYBakq/pub?gid=2141326006&single=true&output=csv",
+const SHEET_CSV_URLS = ["https://docs.google.com/spreadsheets/d/e/2PACX-1vQU_8CxXT-FSCwfzgeyFTr_4oeNdSSwh070hQ1OY7v96-gyMpBGV0D2gB--Lin4Hhy1MSLRP7RYDFrh/pub?gid=1866573031&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vRMzKSiQFhjBEReRxywbTubH0CQGET2z6lINqgU1W5QjRCIj7gbARABZvaDttT_Jg-bZvHWqky6CmOo/pub?gid=6797641&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vSWBLmDBTlA4PaJd-YaFtHRA5qwRXv5yclVrLQsxlKjije-nM0zS9LuMo2Cp-ANuAp_aXl_-WTDmDP4/pub?gid=683771494&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vSSsF9azixm0K-LGe_7iTpIgI45GruYTy9oNXvXPnUgQpfQKyoF1590-XyGqOwGOTnaPLD-QaHiXUpI/pub?gid=373688991&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vRmaO0EUwK4Mk1G-9VPRTcJgOvCRgNKQfonBTxvAZOjQIyHjdqFzJNE6L6915b7vWt-R6aDAlYNsKtc/pub?gid=704123161&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vSGq7A3I4c5HrNVEFgZY_rg8DpEY_Xlgfmr-2yuV4jcina2ran473eU2AaOVrpZ2dFg4Tn_GKN8QfwH/pub?gid=976144912&single=true&output=csv",
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vRzLKwdg7-q7tx3mfV8TpOXjV_egoOqY1qKC7zZ0ITRFyLLp413NjmiWRGSDWw57hAal4Q1-l6z6TSw/pub?gid=186551713&single=true&output=csv",
 ];
 
 // ================================
@@ -51,8 +51,10 @@ const SCHOOL_INFO = {
 // শুধু PASS/FAIL দেখাবে (প্রতিটা বিষয়ের ঘরে এবং Grand Total ঘরে)
 // নিচে ঠিক সেই বানানেই লিখুন যেভাবে আপনার Google Sheet এর "class" কলামে লেখা আছে
 // ================================
-const NO_GRADE_CLASSES = [];
+const NO_GRADE_CLASSES = ["ওয়ান"];
 
+const EXCELLENT_BADGE_CLASSES = ["", ""];
+const EXCELLENT_BADGE_LIMIT = 3;
 const MT2_COLUMN_SUFFIX = " mt2";
 const MAX_COLUMN_SUFFIX = " max";
 const TOTAL_COLUMN_SUFFIX = " total";
@@ -146,7 +148,7 @@ const REMARKS_BY_CHANGE = {
   // আগের চেয়ে ভালো অবস্থানে এসেছে (যেমন ৪র্থ থেকে ১ম)
   improved: "অভিনন্দন! আপনার ফলাফলে উন্নতি হয়েছে। এই ধারা অব্যাহত রাখুন।",
   
-  dropped: "ফলাফলে কিছুটা অবনতি হয়েছে। আরও মনোযোগ দিয়ে চেষ্টা করুন।",
+  dropped: "এবার ফলাফলে কিছুটা অবনতি হয়েছে। আরও মনোযোগ দিয়ে চেষ্টা করুন।",
   
   same: "আপনি আগের অবস্থান ধরে রেখেছেন। আরও ভালো করার চেষ্টা করুন।"
 };
@@ -213,6 +215,8 @@ const ROUTINE_INFO = {
 //
 // কাস্টম ফন্ট ব্যবহার করতে চাইলে:
 // - BENGALI_NUMBER_FONT_NAME = "your-font-name" দাও
+// true করলে সংখ্যা বাংলায় (০,১,২...) দেখাবে, false করলে ইংরেজিতে (0,1,2...)
+const USE_BENGALI_NUMBERS = false;
 // - এবং HTML ফাইলে @font-face যোগ করে সেই ফন্ট ইম্পোর্ট করতে হবে
 //
 // উদাহরণঃ HTML এর <head> এ এইটা যোগ করো:
@@ -221,4 +225,4 @@ const ROUTINE_INFO = {
 //   src: url('path/to/font.woff2') format('woff2'),
 //        url('path/to/font.woff') format('woff');
 // }
-const BENGALI_NUMBER_FONT = "tiro-bangla"; // "tiro-bangla" | "hind-siliguri" | "baloo-da-2" | "custom-font-name"
+const BENGALI_NUMBER_FONT = "hind-siliguri"; // আগে হয়তো "tiro-bangla" ছিল // "tiro-bangla" | "hind-siliguri" | "baloo-da-2" | "custom-font-name"
