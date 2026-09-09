@@ -326,12 +326,6 @@ select.input{
   border-top:1px solid var(--line);padding-top:5px;margin-top:8px;
 }
 
-/* Bengali Number Font Customization */
-/* এই ক্লাস গুলোতে শুধু বাংলা সংখ্যা (০,১,২,৩...) এর জন্য কাস্টম ফন্ট */
-.bn-number {
-  font-family: 'Tiro Bangla', serif;
-}
-
 /* ডাউনলোড/প্রিন্ট বাটন */
 .result-actions{
   display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;
@@ -467,17 +461,17 @@ select.input{
 }
 
 /* Bengali Number Font Customization */
-/* শুধু বাংলা সংখ্যা (०,१,२,३...) এর জন্য কাস্টম ফন্ট */
+/* সংখ্যার জন্য কাস্টম ফন্ট (USE_BENGALI_NUMBERS true/false — দুটো ক্ষেত্রেই এই ক্লাস বসে) */
 .bn-number {
   font-family: 'Tiro Bangla', serif;
 }
 
-/* বাংলা সংখ্যার বিভিন্ন ফন্ট অপশন */
+/* বাংলা/ইংরেজি সংখ্যার বিভিন্ন ফন্ট অপশন */
 .bn-number.tiro-bangla-font {
   font-family: 'Tiro Bangla', serif;
   font-weight: 400;
 }
-c
+
 .bn-number.hind-siliguri-font {
   font-family: 'Hind Siliguri', sans-serif;
   font-weight: 600;
