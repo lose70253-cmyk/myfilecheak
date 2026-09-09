@@ -52,7 +52,14 @@ const FONT_CLASS_MAP = {
 };
 
 function toBnDigits(str){
+  // USE_BENGALI_NUMBERS = false করলে সব জায়গায় সংখ্যা ইংরেজিতে (0,1,2...) দেখাবে,
+  // true (বা config.js-এ না থাকলে ডিফল্ট) করলে বাংলা সংখ্যা (০,১,২...) দেখাবে
+  const useBn = typeof USE_BENGALI_NUMBERS === "undefined" ? true : USE_BENGALI_NUMBERS;
   const fontClass = FONT_CLASS_MAP[typeof BENGALI_NUMBER_FONT !== 'undefined' ? BENGALI_NUMBER_FONT : 'tiro-bangla'] || FONT_CLASS_MAP["default"];
+  if(!useBn){
+    // ইংরেজি সংখ্যা দেখানোর সময়ও একই ফন্ট (BENGALI_NUMBER_FONT-এ যেটা সেট করা) ব্যবহার হবে
+    return `<span class="bn-number ${fontClass}">${str}</span>`;
+  }
   const bnStr = String(str).replace(/[0-9]/g, d => BN_DIGITS[d]);
   return `<span class="bn-number ${fontClass}">${bnStr}</span>`;
 }
@@ -120,7 +127,7 @@ function getSubjectKeys(){
 }
 
 // একটি স্টুডেন্ট রো থেকে একটি বিষয়ের সব তথ্য বের করা: OBTAINED, MT2, MAX,
-// এবং TOTAL/%/GRADE/RESULT — এগুলো Sheet-এ দেওয়া থাকলে সরাসরি সেটাই ব্যবহার
+// এবং TOTAL/%/GRADE/GPA/RESULT — এগুলো Sheet-এ দেওয়া থাকলে সরাসরি সেটাই ব্যবহার
 // হবে (তুমি সূত্র দিয়ে বসালে), না থাকলে ওয়েবসাইট নিজে হিসাব করে দেবে।
 function getSubjectMarks(row, subjectKey){
   const mt2Suffix     = typeof MT2_COLUMN_SUFFIX !== "undefined" ? MT2_COLUMN_SUFFIX : " mt2";
@@ -129,6 +136,7 @@ function getSubjectMarks(row, subjectKey){
   const percentSuffix  = typeof PERCENT_COLUMN_SUFFIX !== "undefined" ? PERCENT_COLUMN_SUFFIX : " %";
   const gradeSuffix    = typeof GRADE_COLUMN_SUFFIX !== "undefined" ? GRADE_COLUMN_SUFFIX : " grade";
   const resultSuffix   = typeof RESULT_COLUMN_SUFFIX !== "undefined" ? RESULT_COLUMN_SUFFIX : " result";
+  const pointSuffix    = typeof POINT_COLUMN_SUFFIX !== "undefined" ? POINT_COLUMN_SUFFIX : " gpa";
   const defaultMax     = typeof DEFAULT_MAX_MARKS !== "undefined" ? DEFAULT_MAX_MARKS : 100;
 
   const obtained = parseFloat(row[subjectKey]);
@@ -139,11 +147,11 @@ function getSubjectMarks(row, subjectKey){
   const max = isNaN(maxFromSheet) ? defaultMax : maxFromSheet;
   const cleanObtained = isNaN(obtained) ? 0 : obtained;
   const cleanMt2 = isNaN(mt2) ? 0 : mt2;
+  const hasMt2 = !isNaN(mt2);
 
-  // TOTAL: Sheet-এ দেওয়া থাকলে সেটাই, নাহলে শুধু OBTAINED
-  // (MT2 নম্বর এখন আর টোটালের সাথে যোগ হয় না)
+  // TOTAL: Sheet-এ দেওয়া থাকলে সেটাই, নাহলে OBTAINED + MT2 (দুটোই যোগ হয়ে TOTAL হবে)
   const totalFromSheet = parseFloat(row[subjectKey + totalSuffix]);
-  const total = isNaN(totalFromSheet) ? cleanObtained : totalFromSheet;
+  const total = isNaN(totalFromSheet) ? (cleanObtained + cleanMt2) : totalFromSheet;
 
   // %: Sheet-এ দেওয়া থাকলে সেটাই, নাহলে TOTAL/MAX*100
   const pctFromSheet = parseFloat(row[subjectKey + percentSuffix]);
@@ -152,6 +160,10 @@ function getSubjectMarks(row, subjectKey){
   // GRADE: Sheet-এ দেওয়া থাকলে সেটাই, নাহলে পার্সেন্টেজ অনুযায়ী হিসাব
   const gradeFromSheet = (row[subjectKey + gradeSuffix] || "").trim();
   const grade = gradeFromSheet ? gradeFromSheet : gradeFromPercent(pct).grade;
+
+  // POINT/GPA: Sheet-এ "[বিষয়] gpa" কলামে সংখ্যা দেওয়া থাকলে সেটাই, নাহলে % থেকে অটো হিসাব
+  const pointFromSheet = parseFloat(row[subjectKey + pointSuffix]);
+  const point = isNaN(pointFromSheet) ? gradeFromPercent(pct).point : pointFromSheet;
 
   // RESULT: Sheet-এ দেওয়া থাকলে সেটাই, নাহলে পার্সেন্টেজ অনুযায়ী হিসাব
   const resultFromSheet = (row[subjectKey + resultSuffix] || "").trim();
@@ -166,10 +178,12 @@ function getSubjectMarks(row, subjectKey){
   return {
     obtained: cleanObtained,
     mt2: cleanMt2,
+    hasMt2,
     max,
     total,
     pct,
     grade,
+    point,
     result,
     hasAny
   };
@@ -196,26 +210,55 @@ function calculateMeritForAllClasses(){
   classesList.forEach(cls => {
     const classStudents = allRows.filter(r => norm(r["class"]) === norm(cls));
 
-    // মেরিট এখন থেকে GPA/পয়েন্ট অনুযায়ী হবে (মোট নম্বর অনুযায়ী না) —
-    // attendance-এর পয়েন্ট এই গড়ে যোগ হবে না (শুধু বাকি সাবজেক্টগুলোর পয়েন্ট দিয়ে গড় করা হয়)
+    // মেরিট হিসাব: প্রথমে যারা সব বিষয়ে পাস (Fail Subject = 0) তারা আগে থাকবে,
+    // তাদের মধ্যে Grand GPA বেশি হলে আগে, GPA সমান হলে Grand Total (obtained) বেশি
+    // হলে আগে। GPA এবং Total দুটোই সমান হলে একই Rank হবে। এরপর যারা ফেল করেছে
+    // তাদেরও একই নিয়মে (GPA তারপর Total) সাজানো হবে।
     const studentsWithPoints = classStudents.map(row => {
-      let totalPoints = 0, pointSubjectCount = 0;
+      let totalPoints = 0, pointSubjectCount = 0, totalObtained = 0, anyFail = false;
+
       subjectKeys.forEach(key => {
         const marks = getSubjectMarks(row, key);
         if(!marks.hasAny) return;
-        totalPoints += gradeFromPercent(marks.pct).point;
+        totalPoints += marks.point;
         pointSubjectCount++;
+        totalObtained += marks.total;
+        if(marks.result === "FAIL") anyFail = true;
       });
+
+      // attendance নম্বর Grand Total-এ যোগ হবে (GPA-এর গড়ে যোগ হবে না, আগের মতোই)
+      const attendanceMarks = getCombinedAttendance(row);
+      if(attendanceMarks){
+        totalObtained += attendanceMarks.obtained;
+      }
+
       const avgGPA = pointSubjectCount ? totalPoints / pointSubjectCount : 0;
-      return { row, avgGPA };
+      return { row, avgGPA, totalObtained, anyFail };
     });
 
-    studentsWithPoints.sort((a, b) => b.avgGPA - a.avgGPA);
+    // (১) পাস আগে, ফেল পরে  (২) GPA বেশি আগে  (৩) Total বেশি আগে
+    studentsWithPoints.sort((a, b) => {
+      if(a.anyFail !== b.anyFail) return a.anyFail ? 1 : -1;
+      if(b.avgGPA !== a.avgGPA) return b.avgGPA - a.avgGPA;
+      return b.totalObtained - a.totalObtained;
+    });
 
     studentMeritData[norm(cls)] = {};
+    let lastRank = 0;
     studentsWithPoints.forEach((item, index) => {
       const roll = item.row["roll"];
-      const rank = index + 1;
+      const prev = studentsWithPoints[index - 1];
+
+      // আগের ছাত্রের সাথে (একই fail-status, একই GPA, একই Total) মিলে গেলে একই Rank
+      let rank;
+      if(prev && prev.anyFail === item.anyFail &&
+         prev.avgGPA === item.avgGPA && prev.totalObtained === item.totalObtained){
+        rank = lastRank;
+      } else {
+        rank = index + 1;
+      }
+      lastRank = rank;
+
       const meritLabel = generateMeritLabel(rank);
       studentMeritData[norm(cls)][roll] = {
         rank: rank,
@@ -266,7 +309,7 @@ function buildReportCardHTML(row){
     totalMax += marks.max;
     subjectCount++;
 
-    const subjPoint = gradeFromPercent(marks.pct).point;
+    const subjPoint = marks.point;
     totalPoints += subjPoint;
     pointSubjectCount++;
 
@@ -274,8 +317,8 @@ function buildReportCardHTML(row){
       <tr>
         <td class="subj-name">${SUBJECT_LABELS[key] || key}</td>
         <td>${toBnDigits(marks.max)}</td>
+        <td>${marks.hasMt2 ? toBnDigits(marks.mt2) : '-'}</td>
         <td>${toBnDigits(marks.obtained)}</td>
-        <td>-</td>
         <td><b>${toBnDigits(marks.total)}</b></td>
         <td>${toBnDigits(marks.pct.toFixed(0))}%</td>
         <td>${noGrade ? '-' : marks.grade}</td>
@@ -304,12 +347,12 @@ function buildReportCardHTML(row){
       <tr>
         <td class="subj-name">${ATTENDANCE_LABEL}</td>
         <td>${toBnDigits(attendanceMarks.max)}</td>
-        <td>${toBnDigits(attendanceMarks.obtained)}</td>
         <td>-</td>
+        <td>${toBnDigits(attendanceMarks.obtained)}</td>
         <td><b>${toBnDigits(attendanceMarks.obtained)}</b></td>
         <td>${toBnDigits(attPct.toFixed(0))}%</td>
         <td>${noGrade ? '-' : attGrade}</td>
-        <td>${noGrade ? '-' : toBnDigits(attPoint.toFixed(2))}</td>
+        <td>-</td>
         <td class="${attResult === 'PASS' ? 'cell-pass' : 'cell-fail'}">${attResult}</td>
       </tr>`;
   }
@@ -332,6 +375,13 @@ function buildReportCardHTML(row){
     meritInfo = studentMeritData[classNorm][roll];
     rank = meritInfo.rank;
   }
+
+  // এই ক্লাস Excellent Badge তালিকায় আছে কিনা এবং rank সেই ক্লাসের নির্দিষ্ট
+  // লিমিটের (ডিফল্ট Top 3) মধ্যে আছে কিনা — থাকলে Merit-এর পাশাপাশি বাড়তি
+  // "🌟 Excellent" ব্যাজ দেখানো হবে (Merit বাদ যাবে না, দুটোই একসাথে থাকবে)
+  const showExcellentBadge = typeof EXCELLENT_BADGE_CLASSES !== "undefined" &&
+    EXCELLENT_BADGE_CLASSES.some(c => norm(c) === classNorm) &&
+    rank && rank <= (typeof EXCELLENT_BADGE_LIMIT !== "undefined" ? EXCELLENT_BADGE_LIMIT : 3);
 
   let remarks = row["remarks"];
   if(!remarks){
@@ -360,6 +410,7 @@ function buildReportCardHTML(row){
             <strong>${overallResult === 'PASSED' ? 'PASSED' : 'FAILED'}</strong>
             ${meritInfo && meritInfo.merit ? `<em>${meritInfo.merit.toUpperCase()}</em>` : ''}
           </div>
+          ${showExcellentBadge ? `<div style="margin-top:6px;padding:4px 12px;background:#fff3cd;color:#8a6500;border:1px solid #ffe08a;border-radius:20px;font-weight:700;font-size:13px;text-align:center;">🌟 Excellent</div>` : ''}
         </div>
 
         <div class="section-title">Student Information</div>
@@ -374,7 +425,7 @@ function buildReportCardHTML(row){
           </tr>
           <tr>
             <td><span class="info-label">Class:</span> <span class="info-value">${row["class"] || "-"}</span></td>
-            <td><span class="info-label">Attendance:</span> <span class="info-value">${attendance}</span></td>
+            <td><span class="info-label">Attendance:</span> <span class="info-value">${attendance === "-" ? attendance : attendance + "%"}</span></td>
           </tr>
           <tr>
             <td><span class="info-label">Class Roll:</span> <span class="info-value">${row["roll"] || "-"}</span></td>
@@ -386,7 +437,7 @@ function buildReportCardHTML(row){
         <div class="table-scroll">
         <table class="marks-table">
           <thead>
-            <tr><th>SUBJECT</th><th>MAX MARKS</th><th>OBTAINED</th><th>MT2</th><th>TOTAL</th><th>%</th><th>GRADE</th><th>GPA</th><th>RESULT</th></tr>
+            <tr><th>SUBJECT</th><th>MAX MARKS</th><th>MT2</th><th>SEMESTER</th><th>TOTAL</th><th>%</th><th>GRADE</th><th>GPA</th><th>RESULT</th></tr>
           </thead>
           <tbody>${subjectRowsHTML}</tbody>
           <tfoot>
@@ -404,7 +455,7 @@ function buildReportCardHTML(row){
         </table>
         </div>
 
-        ${noGrade ? '' : '<p class="grade-scale">Grade Scale: A+ (৮০-১০০), A (৬০-৭৯), B (৪০-৫৯), C (৩৩-৩৯), F (০-৩২)</p>'}
+        ${noGrade ? '' : '<p class="grade-scale">Grade Scale: A+ (80-100), A (60-79), B (40-59), C (33-39), F (0-32)</p>'}
 
         <div class="remarks-box">
           <span>মন্তব্য (Remarks):</span> <em>${remarks}</em>
